@@ -100,7 +100,7 @@ def generate_annotation_file(src: Path, annotation_file: str):
             total=len(video_files),
             leave=True,
         ):
-            f.write(f"{video}\t{label}\n")
+            f.write(f"{video} {label}\n")
 
 
 def main():
