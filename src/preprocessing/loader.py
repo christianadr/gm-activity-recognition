@@ -13,6 +13,20 @@ def video_splitting(
     val_dir: Path,
     val_size: float = 0.2,
 ):
+    """Splits video files into train and validation splits
+
+    Parameters
+    ----------
+    src : Path
+        Source path to raw files.
+    train_dir : Path
+        Output train path to store train files.
+    val_dir : Path
+        Output validation path to store validation files
+    val_size : float, optional
+        Split validation size, by default 0.2
+    """
+
     # Create train and validation directories
     train_dir.mkdir(parents=True, exist_ok=True)
     val_dir.mkdir(parents=True, exist_ok=True)
@@ -61,7 +75,16 @@ def video_splitting(
         copyfile(src=source, dst=destination)
 
 
-def generate_annotation_file(src, annotation_file):
+def generate_annotation_file(src: Path, annotation_file: str):
+    """Generates annotation file in txt format.
+
+    Parameters
+    ----------
+    src : Path
+        Source path to generate annotation.
+    annotation_file : str
+        Annotation file to save
+    """
     video_files = [vid.name.__str__() for vid in list(src.iterdir())]
 
     labels = [vid.__str__().split("_")[1] for vid in video_files]
