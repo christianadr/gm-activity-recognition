@@ -10,6 +10,15 @@ GROSSMOTOR_DIR = Path(PROJECT_DIR, "data", "grossmotor")
 TRAIN_DIR = Path(GROSSMOTOR_DIR, "train")
 VAL_DIR = Path(GROSSMOTOR_DIR, "val")
 
+GROSSMOTOR_DIR_PK = Path(PROJECT_DIR, "data", "grossmotor-pose")
 
 # CLASS NAMES
-CLASS_NAMES = ["gallop", "hop", "jump", "leap", "run", "skip", "slide"]
+CLASS_NAMES = {
+    "gallop": 0,
+    "hop": 1,
+    "jump": 2,
+    "leap": 3,
+    "run": 4,
+    "skip": 5,
+    "slide": 6,
+}
