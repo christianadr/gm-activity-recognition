@@ -1,8 +1,8 @@
-ann_file_train = "data/grossmotor/grossmotor_locomotor_train_video.txt"
-ann_file_val = "data/grossmotor/grossmotor_locomotor_val_video.txt"
+ann_file_train = "/content/drive/MyDrive/grossmotor/grossmotor_locomotor_train_video.txt"
+ann_file_val = "/content/drive/MyDrive/grossmotor/grossmotor_locomotor_val_video.txt"
 auto_scale_lr = dict(base_batch_size=256, enable=False)
-data_root = "data/grossmotor/train/"
-data_root_val = "data/grossmotor/val/"
+data_root = "/content/drive/MyDrive/grossmotor/train"
+data_root_val = "/content/drive/MyDrive/grossmotor/val"
 dataset_type = "VideoDataset"
 default_hooks = dict(
     checkpoint=dict(
@@ -24,7 +24,7 @@ env_cfg = dict(
 file_client_args = dict(io_backend="disk")
 load_from = "https://download.openmmlab.com/mmaction/v1.0/recognition/tsn/tsn_imagenet-pretrained-r50_8xb32-1x1x3-100e_kinetics400-rgb/tsn_imagenet-pretrained-r50_8xb32-1x1x3-100e_kinetics400-rgb_20220906-cd10898e.pth"
 log_level = "INFO"
-log_processor = dict(by_epoch=True, type="LogProcessor", window_size=20)
+log_processor = dict(by_epoch=True, type="LogProcessor", window_size=10)
 model = dict(
     backbone=dict(
         depth=50,
@@ -82,7 +82,7 @@ test_cfg = dict(type="TestLoop")
 test_dataloader = dict(
     batch_size=1,
     dataset=dict(
-        ann_file="data/grossmotor/grossmotor_locomotor_val_video.txt",
+        ann_file="/content/drive/MyDrive/grossmotor/grossmotor_locomotor_val_video.txt",
         data_prefix=dict(video=data_root_val),
         pipeline=[
             dict(io_backend="disk", type="DecordInit"),
@@ -108,7 +108,7 @@ test_dataloader = dict(
         test_mode=True,
         type="VideoDataset",
     ),
-    num_workers=8,
+    num_workers=4,
     persistent_workers=True,
     sampler=dict(shuffle=False, type="DefaultSampler"),
 )
@@ -132,9 +132,9 @@ test_pipeline = [
 ]
 train_cfg = dict(max_epochs=50, type="EpochBasedTrainLoop", val_begin=1, val_interval=1)
 train_dataloader = dict(
-    batch_size=32,
+    batch_size=8,
     dataset=dict(
-        ann_file="data/grossmotor/grossmotor_locomotor_train_video.txt",
+        ann_file="/content/drive/MyDrive/grossmotor/grossmotor_locomotor_train_video.txt",
         data_prefix=dict(video=data_root),
         pipeline=[
             dict(io_backend="disk", type="DecordInit"),
@@ -173,7 +173,7 @@ train_dataloader = dict(
         ],
         type="VideoDataset",
     ),
-    num_workers=8,
+    num_workers=4,
     persistent_workers=True,
     sampler=dict(shuffle=True, type="DefaultSampler"),
 )
@@ -214,9 +214,9 @@ train_pipeline = [
 ]
 val_cfg = dict(type="ValLoop")
 val_dataloader = dict(
-    batch_size=32,
+    batch_size=8,
     dataset=dict(
-        ann_file="data/grossmotor/grossmotor_locomotor_val_video.txt",
+        ann_file="/content/drive/MyDrive/grossmotor/grossmotor_locomotor_val_video.txt",
         data_prefix=dict(video=data_root_val),
         pipeline=[
             dict(io_backend="disk", type="DecordInit"),
@@ -242,7 +242,7 @@ val_dataloader = dict(
         test_mode=True,
         type="VideoDataset",
     ),
-    num_workers=8,
+    num_workers=4,
     persistent_workers=True,
     sampler=dict(shuffle=False, type="DefaultSampler"),
 )

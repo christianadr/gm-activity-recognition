@@ -9,3 +9,7 @@ PROCESSED_DIR = Path(PROJECT_DIR, "data", "processed")
 GROSSMOTOR_DIR = Path(PROJECT_DIR, "data", "grossmotor")
 TRAIN_DIR = Path(GROSSMOTOR_DIR, "train")
 VAL_DIR = Path(GROSSMOTOR_DIR, "val")
+
+
+# CLASS NAMES
+CLASS_NAMES = ["gallop", "hop", "jump", "leap", "run", "skip", "slide"]

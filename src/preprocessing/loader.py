@@ -1,3 +1,4 @@
+from collections import defaultdict
 from pathlib import Path
 from shutil import copyfile
 
@@ -92,6 +93,8 @@ def generate_annotation_file(src: Path, annotation_file: str):
     # Encode labels
     encoder = LabelEncoder()
     encoded_labels = encoder.fit_transform(labels)
+    class_names = encoder.classes_
+    print(class_names)
 
     with open(annotation_file, "w") as f:
         for video, label in tqdm(
