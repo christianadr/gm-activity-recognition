@@ -1,6 +1,5 @@
 import os
 import tempfile
-import threading
 
 import cv2
 import mmcv
@@ -14,7 +13,6 @@ from mmaction.apis import (
 )
 from mmaction.registry import VISUALIZERS
 from mmaction.utils import frame_extract
-from mmengine import DictAction
 from mmengine.utils import track_iter_progress
 
 try:
@@ -47,7 +45,7 @@ class RunInference:
         label_map: str = "src/tests/label_map_grossmotor.txt",
         short_side: int = 480,
         cfg_options: dict = {},
-        device: str = "cuda:0",
+        device: str = None,
     ):
         self.video_path = video_path
         self.out_filename = out_filename
@@ -61,7 +59,14 @@ class RunInference:
         self.label_map = label_map
         self.short_side = short_side
         self.cfg_options = cfg_options
-        self.device = device
+
+        if device is None:
+            if torch.cuda.is_available():
+                self.device = "cuda:0"
+
+            else:
+                self.device = "cpu"
+                print("CUDA not supported, using CPU instead.")
 
     def draw_percentage_bar(self, frame, scores, label_map):
         h, w, _ = frame.shape
