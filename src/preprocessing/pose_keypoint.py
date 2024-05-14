@@ -287,10 +287,10 @@ def main():
         total=len(video_filepaths),
     ):
         dst = osp.join(
-            g.GROSSMOTOR_DIR_PK, osp.splitext(osp.basename(src_vid))[0] + ".pkl"
+            g.GROSSMOTOR_DIR_PK2, osp.splitext(osp.basename(src_vid))[0] + ".pkl"
         )
         if not osp.exists(dst):
-            anno = ntu_pose_extraction(src_vid.__str__())
+            anno = ntu_pose_extraction(src_vid.__str__(), skip_postproc=True)
             mmengine.dump(anno, dst)
         else:
             print(f"{dst} already exists")

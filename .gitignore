@@ -91,3 +91,9 @@ data/
 
 # mmlab
 mmaction2/
+
+# pyskl
+pyskl/
+
+# demo files
+demo/
