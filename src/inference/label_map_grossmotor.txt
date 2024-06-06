@@ -1,7 +1,0 @@
-gallop
-hop
-jump
-leap
-run
-skip
-slide

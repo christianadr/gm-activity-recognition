@@ -1,9 +1,12 @@
-import os
 import tempfile
+from pathlib import Path
+from typing import Tuple
 
 import cv2
-import mmcv
+
+# import mmcv
 import mmengine
+import settings
 import torch
 from constants import globals as g
 from mmaction.apis import (
@@ -12,9 +15,11 @@ from mmaction.apis import (
     init_recognizer,
     pose_inference,
 )
-from mmaction.registry import VISUALIZERS
+
+# from mmaction.registry import VISUALIZERS
 from mmaction.utils import frame_extract
-from mmengine.utils import track_iter_progress
+
+# from mmengine.utils import track_iter_progress
 
 try:
     import moviepy.video.io.ImageSequenceClip as mpy
@@ -22,201 +27,132 @@ except ImportError:
     raise ImportError("Please install moviepy to enable output file")
 
 
-FONTFACE = cv2.FONT_HERSHEY_DUPLEX
-FONTSCALE = 0.5
-FONTCOLOR = (255, 255, 255)
-THICKNESS = 1
-LINETYPE = 1
-BACKGROUND_COLOR = (0, 0, 0)
-BACKGROUND_ALPHA = 0.5
-
-
-class RunInference:
-    def __init__(
-        self,
-        video_path,
-        out_filename,
-        config: str = "configs/pretrained_slowonly_resnet50_gym-keypoint_v2.py",
-        checkpoint: str = "models/best_acc_top1_epoch_17.pth",
-        det_config: str = "mmaction2/demo/demo_configs/faster-rcnn_r50-caffe_fpn_ms-1x_coco-person.py",
-        det_checkpoint: str = "models/faster_rcnn_r50_fpn_1x_coco-person_20201216_175929-d022e227.pth",
-        pose_config: str = "mmaction2/demo/demo_configs/td-hm_hrnet-w32_8xb64-210e_coco-256x192_infer.py",
-        pose_checkpoint: str = "models/hrnet_w32_coco_256x192-c78dce93_20200708.pth",
-        det_score_thr: float = 0.9,
-        label_map: str = g.LABEL_MAP_PATH.__str__(),
-        short_side: int = 480,
-        cfg_options: dict = {},
-        device: str = None,
-    ):
-        self.video_path = video_path
-        self.out_filename = out_filename
-        self.config = config
-        self.checkpoint = checkpoint
-        self.det_config = det_config
-        self.det_checkpoint = det_checkpoint
-        self.pose_config = pose_config
-        self.pose_checkpoint = pose_checkpoint
-        self.det_score_thr = det_score_thr
-        self.label_map = label_map
-        self.short_side = short_side
-        self.cfg_options = cfg_options
-
-        if device is None:
-            if torch.cuda.is_available():
-                self.device = "cuda:0"
-
-            else:
-                self.device = "cpu"
-                print("CUDA not supported, using CPU instead.")
-
-    def draw_percentage_bar(self, frame, scores, label_map):
-        h, w, _ = frame.shape
-        bar_height = 15
-        bar_length = 100
-        padding = 5
-        x_offset = w - bar_length - padding
-        y_offset = h - (len(scores) * (bar_height + padding)) - padding
-        max_score = max(scores)
-
-        overlay = frame.copy()
-        for i, score in enumerate(scores):
-            label = label_map[i]
-            percentage = "{:.4f}".format(score * 100)
-            bar_width = int(score * bar_length / max_score)
-            bar_y1 = y_offset + i * (bar_height + padding)
-            bar_y2 = bar_y1 + bar_height
-
-            text = f"{label}: {percentage}%"
-            text_size = cv2.getTextSize(text, FONTFACE, FONTSCALE, THICKNESS)[0]
-            text_x = x_offset - text_size[0] - padding * 2
-            text_y = bar_y1 + bar_height - 3
-
-            text_x = max(text_x, 0)
-            text_y = min(text_y, h - 3)
-
-            cv2.rectangle(
-                overlay,
-                (text_x - padding, bar_y1),
-                (text_x + text_size[0] + padding, bar_y2),
-                BACKGROUND_COLOR,
-                cv2.FILLED,
-            )
-
-            cv2.rectangle(
-                overlay,
-                (x_offset, bar_y1),
-                (x_offset + bar_width, bar_y2),
-                (0, 255, 0),
-                cv2.FILLED,
-            )
-            cv2.putText(
-                overlay,
-                text,
-                (text_x, text_y),
-                FONTFACE,
-                FONTSCALE,
-                FONTCOLOR,
-                THICKNESS,
-                LINETYPE,
-            )
-
-        cv2.addWeighted(
-            overlay, BACKGROUND_ALPHA, frame, 1 - BACKGROUND_ALPHA, 0, frame
+def run_inference(
+    video_path: str,
+    output_path: str = "./vid",
+    **kwargs,
+) -> Tuple[str, float]:
+    if output_path == "./vid":
+        Path(output_path).mkdir(
+            parents=True,
+            exist_ok=True,
         )
 
-    def visualize(self, frames, data_samples, action_label, scores, label_map):
-        pose_config = mmengine.Config.fromfile(self.pose_config)
-        visualizer = VISUALIZERS.build(pose_config.visualizer)
-        visualizer.set_dataset_meta(data_samples[0].dataset_meta)
+    if torch.cuda.is_available():
+        device = "cuda:0"
+    else:
+        device = "cpu"
 
-        vis_frames = []
-        print("Drawing skeleton and percentage bar for each frame")
-        for d, f in track_iter_progress(list(zip(data_samples, frames))):
-            f = mmcv.imconvert(f, "bgr", "rgb")
-            visualizer.add_datasample(
-                "result",
-                f,
-                data_sample=d,
-                draw_gt=False,
-                draw_heatmap=False,
-                draw_bbox=True,
-                show=False,
-                wait_time=0,
-                out_file=None,
-                kpt_thr=0.3,
-            )
-            vis_frame = visualizer.get_image()
-            self.draw_percentage_bar(vis_frame, scores, label_map)
-            vis_frames.append(vis_frame)
+    tmp_dir = tempfile.TemporaryDirectory()
 
-        # Save the frames as a video
-        print("Saving the video")
-        height, width, layers = vis_frames[0].shape
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # or 'XVID'
-        video = cv2.VideoWriter(self.out_filename, fourcc, 30, (width, height))
+    def clipped_one_sec() -> str:
+        cap = cv2.VideoCapture(video_path)
 
-        for frame in vis_frames:
-            video.write(cv2.cvtColor(frame, cv2.COLOR_RGB2BGR))  # Convert back to BGR
+        if not cap.isOpened():
+            raise ValueError(f"Could not open: {video_path}")
 
-        video.release()
-        print(f"Video saved to {self.out_filename}")
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-    def run(self, show_visualization: bool = False):
-        tmp_dir = tempfile.TemporaryDirectory()
-        frame_paths, frames = frame_extract(
-            self.video_path, self.short_side, tmp_dir.name
+        duration = total_frames / fps
+
+        start_time = (duration / 2) - 0.5
+        start_frame = int(start_time * fps)
+
+        frames = []
+        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
+
+        for _ in range(fps):
+            ret, frame = cap.read()
+            if not ret:
+                break
+            frames.append(frame)
+
+        cap.release()
+
+        clip_path = f"{tmp_dir.name}/1-sec-clip.mp4"
+        out = cv2.VideoWriter(
+            clip_path,
+            cv2.VideoWriter_fourcc(*"mp4v"),
+            fps,
+            (
+                frames[0].shape[1],
+                frames[0].shape[0],
+            ),
         )
-        h, w, _ = frames[0].shape
 
-        # Get human detection results
-        det_results, _ = detection_inference(
-            self.det_config,
-            self.det_checkpoint,
-            frame_paths,
-            self.det_score_thr,
-            0,
-            self.device,
-        )
-        torch.cuda.empty_cache()
+        for frame in frames:
+            out.write(frame)
 
-        # Get pose estimation results
-        pose_results, pose_data_samples = pose_inference(
-            self.pose_config,
-            self.pose_checkpoint,
-            frame_paths,
-            det_results,
-            self.device,
-        )
-        torch.cuda.empty_cache()
+        out.release()
+        return clip_path
 
-        config = mmengine.Config.fromfile(self.config)
-        config.merge_from_dict(self.cfg_options)
+    src_clipped_vid = clipped_one_sec()
 
-        model = init_recognizer(config, self.checkpoint, self.device)
-        result = inference_skeleton(model, pose_results, (h, w))
+    frame_paths, frames = frame_extract(
+        src_clipped_vid,
+        short_side=480,
+        out_dir=tmp_dir.name,
+    )
 
-        max_pred_index = result.pred_score.argmax().item()
-        scores = result.pred_score.cpu().numpy()
-        label_map = [x.strip() for x in open(self.label_map).readlines()]
-        action_label = label_map[max_pred_index]
-        action_score = scores[max_pred_index]
+    h, w, _ = frames[0].shape
 
-        if show_visualization:
-            self.visualize(frames, pose_data_samples, action_label, scores, label_map)
+    torch.cuda.empty_cache()
+    det_results, _ = detection_inference(
+        **kwargs["det_config"],
+        frame_paths=frame_paths,
+        device=device,
+    )
 
-        tmp_dir.cleanup()
-        return action_label, action_score
+    torch.cuda.empty_cache()
+    pose_results, pose_data_samples = pose_inference(
+        **kwargs["pose_config"],
+        frame_paths=frame_paths,
+        det_results=det_results,
+        device=device,
+    )
+    torch.cuda.empty_cache()
+    config = mmengine.Config.fromfile(kwargs["model_config"])
+    config.merge_from_dict({})
+
+    model = init_recognizer(
+        config=config,
+        checkpoint=kwargs["model_checkpoint"],
+        device=device,
+    )
+
+    result = inference_skeleton(
+        model=model,
+        pose_results=pose_results,
+        img_shape=(h, w),
+    )
+
+    max_idx = result.pred_score.argmax().item()
+    scores = result.pred_score.cpu().numpy()
+
+    tmp_dir.cleanup()
+
+    action_label = kwargs["label_map"][max_idx]
+    action_score = scores[max_idx]
+
+    return action_label, action_score
 
 
 def main():
     filename = "test-gallop.mp4"
-    src_video = os.path.join(g.TEST_DATA_DIR.__str__(), filename)
-    out_file = os.path.join(g.TEST_DATA_DIR.__str__(), f"{filename}-output.mp4")
-    inference = RunInference(video_path=src_video, out_filename=out_file)
+    src_vid = Path(g.TEST_DATA_DIR, filename)
 
-    pred_action, pred_score = inference.run(show_visualization=True)
+    label, score = run_inference(
+        video_path=src_vid,
+        model_config=settings.MODEL_CONFIG,
+        model_checkpoint=settings.MODEL_CHECKPOINT,
+        det_config=settings.DET_CONFIG,
+        pose_config=settings.POSE_CONFIG,
+        label_map=settings.LABEL_MAP,
+    )
+
     print(
-        f"Predicted action: {pred_action.upper()} with confidence score of {round((pred_score*100), 4)}%."
+        f"Predicted action: {label.upper()} with confidence score of {round((score*100), 4)}%."
     )
 
 
