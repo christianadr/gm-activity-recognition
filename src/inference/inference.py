@@ -5,6 +5,7 @@ import cv2
 import mmcv
 import mmengine
 import torch
+from constants import globals as g
 from mmaction.apis import (
     detection_inference,
     inference_skeleton,
@@ -38,11 +39,11 @@ class RunInference:
         config: str = "configs/pretrained_slowonly_resnet50_gym-keypoint_v2.py",
         checkpoint: str = "models/best_acc_top1_epoch_17.pth",
         det_config: str = "mmaction2/demo/demo_configs/faster-rcnn_r50-caffe_fpn_ms-1x_coco-person.py",
-        det_checkpoint: str = "https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_1x_coco-person/faster_rcnn_r50_fpn_1x_coco-person_20201216_175929-d022e227.pth",
+        det_checkpoint: str = "models/faster_rcnn_r50_fpn_1x_coco-person_20201216_175929-d022e227.pth",
         pose_config: str = "mmaction2/demo/demo_configs/td-hm_hrnet-w32_8xb64-210e_coco-256x192_infer.py",
-        pose_checkpoint: str = "https://download.openmmlab.com/mmpose/top_down/hrnet/hrnet_w32_coco_256x192-c78dce93_20200708.pth",
+        pose_checkpoint: str = "models/hrnet_w32_coco_256x192-c78dce93_20200708.pth",
         det_score_thr: float = 0.9,
-        label_map: str = "src/tests/label_map_grossmotor.txt",
+        label_map: str = g.LABEL_MAP_PATH.__str__(),
         short_side: int = 480,
         cfg_options: dict = {},
         device: str = None,
@@ -208,10 +209,8 @@ class RunInference:
 
 
 def main():
-    from constants import globals as g
-
-    filename = "center-4_run_2_3.mp4"
-    src_video = os.path.join(g.RAW_DIR.__str__(), filename)
+    filename = "test-gallop.mp4"
+    src_video = os.path.join(g.TEST_DATA_DIR.__str__(), filename)
     out_file = os.path.join(g.TEST_DATA_DIR.__str__(), f"{filename}-output.mp4")
     inference = RunInference(video_path=src_video, out_filename=out_file)
 

@@ -25,3 +25,5 @@ CLASS_NAMES = {
     "skip": 5,
     "slide": 6,
 }
+
+LABEL_MAP_PATH = Path(PROJECT_DIR, "src", "inference", "label_map_grossmotor.txt")
