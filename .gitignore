@@ -97,3 +97,10 @@ pyskl/
 
 # demo files
 demo/
+
+# model weights
+models/
+*.pth
+
+# mmaction2 dir
+mmaction2/

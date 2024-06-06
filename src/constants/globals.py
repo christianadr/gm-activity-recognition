@@ -5,6 +5,7 @@ PROJECT_DIR = Path(*Path(__file__).parts[:-3])
 # DATASETS
 RAW_DIR = Path(PROJECT_DIR, "data", "raw")
 PROCESSED_DIR = Path(PROJECT_DIR, "data", "processed")
+TEST_DATA_DIR = Path(PROJECT_DIR, "data", "tests")
 
 GROSSMOTOR_DIR = Path(PROJECT_DIR, "data", "grossmotor")
 TRAIN_DIR = Path(GROSSMOTOR_DIR, "train")
@@ -24,3 +25,5 @@ CLASS_NAMES = {
     "skip": 5,
     "slide": 6,
 }
+
+LABEL_MAP_PATH = Path(PROJECT_DIR, "src", "inference", "label_map_grossmotor.txt")
