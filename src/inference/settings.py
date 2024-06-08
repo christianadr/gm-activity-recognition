@@ -25,3 +25,6 @@ POSE_CONFIG = {
     "pose_config": "mmaction2/demo/demo_configs/td-hm_hrnet-w32_8xb64-210e_coco-256x192_infer.py",
     "pose_checkpoint": "models/hrnet_w32_coco_256x192-c78dce93_20200708.pth",
 }
+
+DET_DEPLOY_CFG = "mmdeploy/configs/mmdet/detection/detection_onnxruntime_dynamic.py"
+DET_BACKEND_MODEL = "/models/det/ort/end2end.onnx"

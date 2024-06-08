@@ -104,3 +104,5 @@ models/
 
 # mmaction2 dir
 mmaction2/
+mmdeploy/
+mmdeploy-dep/

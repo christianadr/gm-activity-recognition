@@ -1,3 +1,4 @@
+import pickle
 import tempfile
 from pathlib import Path
 from typing import Tuple
@@ -6,6 +7,7 @@ import cv2
 
 # import mmcv
 import mmengine
+import numpy as np
 import settings
 import torch
 from constants import globals as g
@@ -104,6 +106,7 @@ def run_inference(
         device=device,
     )
 
+    # print(np.array(det_results).shape)
     torch.cuda.empty_cache()
     pose_results, pose_data_samples = pose_inference(
         **kwargs["pose_config"],
@@ -111,6 +114,10 @@ def run_inference(
         det_results=det_results,
         device=device,
     )
+    print(pose_results)
+    with open("./pose-results", "wb") as f:
+        pickle.dump(pose_results, f)
+
     torch.cuda.empty_cache()
     config = mmengine.Config.fromfile(kwargs["model_config"])
     config.merge_from_dict({})
