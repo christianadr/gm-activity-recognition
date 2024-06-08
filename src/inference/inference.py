@@ -34,6 +34,26 @@ def run_inference(
     output_path: str = "./vid",
     **kwargs,
 ) -> Tuple[str, float]:
+    """Run action recognition inference.
+
+    Parameters
+    ----------
+    video_path : str
+        Source path of video data.
+    output_path : str, optional
+        Destination path of video, if visualization is true, by default "./vid"
+
+    Returns
+    -------
+    Tuple[str, float]
+        Returns predicted label with corresponding confidence score.
+
+    Raises
+    ------
+    ValueError
+        Returns ValueError if source video cannot be read.
+    """
+
     if output_path == "./vid":
         Path(output_path).mkdir(
             parents=True,
