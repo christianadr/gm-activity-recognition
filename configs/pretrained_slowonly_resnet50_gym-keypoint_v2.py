@@ -5,7 +5,7 @@ model = dict(
     backbone=dict(
         type="ResNet3dSlowOnly",
         depth=50,
-        pretrained=None,
+        pretrained="https://download.openmmlab.com/mmaction/skeleton/posec3d/slowonly_r50_u48_240e_gym_keypoint/slowonly_r50_u48_240e_gym_keypoint-b07a98a0.pth",
         in_channels=17,
         base_channels=32,
         num_stages=3,
@@ -29,13 +29,13 @@ model = dict(
 )
 
 dataset_type = "PoseDataset"
-ann_file = "data/grossmotor-pose-combined/grossmotor_2d_v2.pkl"
+ann_file = "../../data/grossmotor-pose-combined/grossmotor_2d_v2.pkl"
 
-load_from = "https://download.openmmlab.com/mmaction/skeleton/posec3d/slowonly_r50_u48_240e_gym_keypoint/slowonly_r50_u48_240e_gym_keypoint-b07a98a0.pth"
+# load_from = "https://download.openmmlab.com/mmaction/skeleton/posec3d/slowonly_r50_u48_240e_gym_keypoint/slowonly_r50_u48_240e_gym_keypoint-b07a98a0.pth"
 left_kp = [1, 3, 5, 7, 9, 11, 13, 15]
 right_kp = [2, 4, 6, 8, 10, 12, 14, 16]
 train_pipeline = [
-    dict(type="UniformSampleFrames", clip_len=48),
+    dict(type="UniformSampleFrames", clip_len=30),
     dict(type="PoseDecode"),
     dict(type="PoseCompact", hw_ratio=1.0, allow_imgpad=True),
     dict(type="Resize", scale=(-1, 64)),
@@ -55,7 +55,7 @@ train_pipeline = [
     # dict(type="ToTensor", keys=["imgs", "label"]),
 ]
 val_pipeline = [
-    dict(type="UniformSampleFrames", clip_len=48, num_clips=1, test_mode=True),
+    dict(type="UniformSampleFrames", clip_len=30, num_clips=1, test_mode=True),
     dict(type="PoseDecode"),
     dict(type="PoseCompact", hw_ratio=1.0, allow_imgpad=True),
     dict(type="Resize", scale=(64, 64), keep_ratio=False),
@@ -73,7 +73,7 @@ val_pipeline = [
     # dict(type="ToTensor", keys=["imgs"]),
 ]
 test_pipeline = [
-    dict(type="UniformSampleFrames", clip_len=48, num_clips=10, test_mode=True),
+    dict(type="UniformSampleFrames", clip_len=30, num_clips=10, test_mode=True),
     dict(type="PoseDecode"),
     dict(type="PoseCompact", hw_ratio=1.0, allow_imgpad=True),
     dict(type="Resize", scale=(64, 64), keep_ratio=False),
@@ -156,9 +156,10 @@ param_scheduler = [
 
 optim_wrapper = dict(
     optimizer=dict(
-        type="Adam",
-        lr=0.001,
-        weight_decay=0.0003,
+        type="SGD",
+        lr=0.01,
+        momentum=0.9,
+        weight_decay=0.0001,
     ),
     clip_grad=dict(max_norm=40, norm_type=2),
 )

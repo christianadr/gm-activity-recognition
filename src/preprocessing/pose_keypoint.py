@@ -269,8 +269,8 @@ def ntu_pose_extraction(vid, skip_postproc=False):
     anno["keypoint"] = keypoints
     anno["keypoint_score"] = scores
     anno["frame_dir"] = osp.splitext(osp.basename(vid))[0]
-    anno["img_shape"] = (1080, 1920)
-    anno["original_shape"] = (1080, 1920)
+    anno["img_shape"] = (1080, 1440)
+    anno["original_shape"] = (1080, 1440)
     anno["total_frames"] = keypoints.shape[1]
     anno["label"] = g.CLASS_NAMES[vid.split("_")[1]]
     tmp_dir.cleanup()
@@ -279,7 +279,7 @@ def ntu_pose_extraction(vid, skip_postproc=False):
 
 
 def main():
-    video_filepaths = list(g.RAW_DIR.iterdir())
+    video_filepaths = list(g.PROCESSED_DIR.iterdir())
 
     for src_vid in tqdm(
         video_filepaths,
