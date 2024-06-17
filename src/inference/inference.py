@@ -1,5 +1,6 @@
 import pickle
 import tempfile
+import time
 from pathlib import Path
 from typing import Tuple
 
@@ -8,9 +9,9 @@ import cv2
 # import mmcv
 import mmengine
 import numpy as np
-import settings
 import torch
 from constants import globals as g
+from inference import settings
 from mmaction.apis import (
     detection_inference,
     inference_skeleton,
@@ -134,7 +135,7 @@ def run_inference(
         det_results=det_results,
         device=device,
     )
-    print(pose_results)
+    # print(pose_results)
     with open("./pose-results", "wb") as f:
         pickle.dump(pose_results, f)
 
@@ -147,12 +148,17 @@ def run_inference(
         checkpoint=kwargs["model_checkpoint"],
         device=device,
     )
+    start = time.time()
 
     result = inference_skeleton(
         model=model,
         pose_results=pose_results,
         img_shape=(h, w),
     )
+
+    end = time.time()
+    elapsed = end - start
+    print(f"Elapsed inference time: {round(elapsed, 4)} seconds")
 
     max_idx = result.pred_score.argmax().item()
     scores = result.pred_score.cpu().numpy()
@@ -166,9 +172,10 @@ def run_inference(
 
 
 def main():
-    filename = "test-gallop.mp4"
+    filename = "hop-trial.mp4"
     src_vid = Path(g.TEST_DATA_DIR, filename)
 
+    start = time.time()
     label, score = run_inference(
         video_path=src_vid,
         model_config=settings.MODEL_CONFIG,
@@ -178,9 +185,13 @@ def main():
         label_map=settings.LABEL_MAP,
     )
 
+    end = time.time()
+
+    elapsed = end - start
     print(
         f"Predicted action: {label.upper()} with confidence score of {round((score*100), 4)}%."
     )
+    print(f"Elapsed inference time: {round(elapsed, 4)} seconds")
 
 
 if __name__ == "__main__":

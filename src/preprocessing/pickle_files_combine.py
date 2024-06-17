@@ -48,7 +48,7 @@ def combine_pickles_from_directory(src: Path, dst: Path):
         if key in combined_data["annotations"][0]
     }
 
-    target_path = Path(dst, "grossmotor_2d_v2.pkl").__str__()
+    target_path = Path(dst, "grossmotor_2d.pkl").__str__()
     with open(target_path, "wb") as f:
         pickle.dump(combined_data, f)
 
