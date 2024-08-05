@@ -40,6 +40,8 @@ def download_video(url: str, dst: Path):
 
 
 def main():
+    # TODO: Not yet tested
+
     args = parse_args()
 
     src, dst = Path(args.src), Path(args.dst)
