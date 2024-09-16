@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
-from pytube import YouTube
+from pytubefix import YouTube
 from tqdm import tqdm
 
 
@@ -31,17 +31,16 @@ def download_video(url: str, dst: Path):
     dst : Path
         Destination directory where to save video
     """
+    YouTube(url).streams.first().download(dst)
     try:
-        yt = YouTube(url)
-        stream = yt.streams.get_highest_resolution()
-        stream.download(dst)
+        YouTube(url).streams.first().download(dst)
+        # stream = yt.streams.get_highest_resolution()
+        # stream.download(dst)
     except Exception as e:
-        print(f"Failed to download {url}: {e}")
+        tqdm.write(f"Failed to download {url}: {e}")
 
 
 def main():
-    # TODO: Not yet tested
-
     args = parse_args()
 
     src, dst = Path(args.src), Path(args.dst)
@@ -52,8 +51,9 @@ def main():
     with src.open("r") as file:
         urls = file.readlines()
 
-    for url in tqdm(urls, total=len(urls), desc="Saving YouTube clips"):
-        url = url.strip()
+    for url in tqdm(urls, total=len(urls), desc="Saving video clips"):
+        # tqdm.write(url)
+        # break
         if url:
             download_video(url, dst)
 

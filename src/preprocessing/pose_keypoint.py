@@ -1,25 +1,37 @@
 import os.path as osp
 from collections import defaultdict
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import mmengine
 import numpy as np
-from constants import globals as g
 from mmaction.apis import detection_inference, pose_inference
 from mmaction.utils import frame_extract
 from tqdm import tqdm
-from utils import settings
 
-# = abc.abstractproperty()
-# det_config = (
-#     "mmaction2/demo/demo_configs/faster-rcnn_r50-caffe_fpn_ms-1x_coco-person.py"  # noqa: E501
-# )
-# det_checkpoint = "https://download.openmmlab.com/mmdetection/v2.0/faster_rcnn/faster_rcnn_r50_fpn_1x_coco-person/faster_rcnn_r50_fpn_1x_coco-person_20201216_175929-d022e227.pth"  # noqa: E501
-# det_score_thr = 0.5
-# pose_config = (
-#     "mmaction2/demo/demo_configs/td-hm_hrnet-w32_8xb64-210e_coco-256x192_infer.py"  # noqa: E501
-# )
-# pose_checkpoint = "https://download.openmmlab.com/mmpose/top_down/hrnet/hrnet_w32_coco_256x192-c78dce93_20200708.pth"  # noqa: E501
+from constants import globals as g
+
+# SETUP VARIABLES
+DET_CONFIG = Path(
+    g.PROJECT_DIR,
+    "mmaction2/demo/demo_configs/faster-rcnn_r50-caffe_fpn_ms-1x_coco-person.py",
+).__str__()
+
+DET_CHECKPOINT = Path(
+    g.PROJECT_DIR,
+    "models/skeleton/faster_rcnn_r50_fpn_1x_coco-person_20201216_175929-d022e227.pth",
+).__str__()
+
+DET_SCORE_THR = 0.5
+POSE_CONFIG = Path(
+    g.PROJECT_DIR,
+    "mmaction2/demo/demo_configs/td-hm_hrnet-w32_8xb64-210e_coco-256x192_infer.py",
+).__str__()
+
+POSE_CHECKPOINT = Path(
+    g.PROJECT_DIR,
+    "models/skeleton/hrnet_w32_coco_256x192-c78dce93_20200708.pth",
+).__str__()
 
 
 def intersection(b0, b1):
@@ -231,8 +243,8 @@ def pose_inference_with_align(frame_paths, det_results):
     det_results = [frm_dets for frm_dets in det_results if frm_dets.shape[0] > 0]
 
     pose_results, _ = pose_inference(
-        settings.pose_config,
-        settings.pose_checkpoint,
+        POSE_CONFIG,
+        POSE_CHECKPOINT,
         frame_paths,
         det_results,
         "cuda:0",
@@ -257,9 +269,9 @@ def ntu_pose_extraction(vid, skip_postproc=False):
     tmp_dir = TemporaryDirectory()
     frame_paths, _ = frame_extract(vid, out_dir=tmp_dir.name)
     det_results, _ = detection_inference(
-        det_config=settings.det_config,
-        det_checkpoint=settings.det_checkpoint,
-        det_score_thr=settings.det_score_thr,
+        det_config=DET_CONFIG,
+        det_checkpoint=DET_CHECKPOINT,
+        det_score_thr=DET_SCORE_THR,
         frame_paths=frame_paths,
         device="cuda:0",
         with_score=True,
@@ -269,7 +281,7 @@ def ntu_pose_extraction(vid, skip_postproc=False):
         det_results = ntu_det_postproc(vid, det_results)
 
     anno = dict()
-    shape = (1080, 1440)
+    shape = (1080, 1920)
     keypoints, scores = pose_inference_with_align(frame_paths, det_results)
     anno["keypoint"] = keypoints
     anno["keypoint_score"] = scores
@@ -277,7 +289,7 @@ def ntu_pose_extraction(vid, skip_postproc=False):
     anno["img_shape"] = shape
     anno["original_shape"] = shape
     anno["total_frames"] = keypoints.shape[1]
-    anno["label"] = g.CLASS_NAMES[vid.split("_")[1]]
+    anno["label"] = g.CLASS_NAMES[osp.basename(vid).split("-")[0]]
     tmp_dir.cleanup()
 
     return anno
