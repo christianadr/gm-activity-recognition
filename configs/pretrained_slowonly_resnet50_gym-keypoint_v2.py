@@ -29,7 +29,7 @@ model = dict(
 )
 
 dataset_type = "PoseDataset"
-ann_file = "../../data/grossmotor-pose-combined/grossmotor_2d_v2.pkl"
+ann_file = "../../data/grossmotor-pose-combined/grossmotor_2d.pkl"
 
 # load_from = "https://download.openmmlab.com/mmaction/skeleton/posec3d/slowonly_r50_u48_240e_gym_keypoint/slowonly_r50_u48_240e_gym_keypoint-b07a98a0.pth"
 left_kp = [1, 3, 5, 7, 9, 11, 13, 15]
@@ -44,8 +44,8 @@ train_pipeline = [
     dict(type="Flip", flip_ratio=0.5, left_kp=left_kp, right_kp=right_kp),
     dict(
         type="GeneratePoseTarget",
-        # sigma=0.6,
-        # use_score=True,
+        sigma=0.6,
+        use_score=True,
         with_kp=True,
         with_limb=False,
     ),
@@ -58,12 +58,12 @@ val_pipeline = [
     dict(type="UniformSampleFrames", clip_len=30, num_clips=1, test_mode=True),
     dict(type="PoseDecode"),
     dict(type="PoseCompact", hw_ratio=1.0, allow_imgpad=True),
-    dict(type="Resize", scale=(64, 64), keep_ratio=False),
+    dict(type="Resize", scale=(-1, 64)),
     dict(type="CenterCrop", crop_size=64),
     dict(
         type="GeneratePoseTarget",
-        # sigma=0.6,
-        # use_score=True,
+        sigma=0.6,
+        use_score=True,
         with_kp=True,
         with_limb=False,
     ),
@@ -80,8 +80,8 @@ test_pipeline = [
     dict(type="CenterCrop", crop_size=64),
     dict(
         type="GeneratePoseTarget",
-        # sigma=0.6,
-        # use_score=True,
+        sigma=0.6,
+        use_score=True,
         with_kp=True,
         with_limb=False,
         double=True,
@@ -140,7 +140,7 @@ test_dataloader = dict(
 val_evaluator = dict(type="AccMetric")
 test_evaluator = val_evaluator
 
-train_cfg = dict(type="EpochBasedTrainLoop", max_epochs=20, val_begin=1, val_interval=1)
+train_cfg = dict(type="EpochBasedTrainLoop", max_epochs=30, val_begin=1, val_interval=1)
 val_cfg = dict(type="ValLoop")
 test_cfg = dict(type="TestLoop")
 
@@ -157,9 +157,9 @@ param_scheduler = [
 optim_wrapper = dict(
     optimizer=dict(
         type="Adam",
-        # lr=0.01,
+        # lr=0.1,
         # momentum=0.9,
-        # weight_decay=0.0001,
+        # weight_decay=0.0003,
     ),
     clip_grad=dict(max_norm=40, norm_type=2),
 )

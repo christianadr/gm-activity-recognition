@@ -296,24 +296,40 @@ def ntu_pose_extraction(vid, skip_postproc=False):
 
 
 def main():
-    from pathlib import Path
+    import os
 
-    video_filepaths = list(g.PROCESSED_DIR.iterdir())
+    src_dir = Path(g.RAW_DIR, "gm-activities")
+    sources = [src for src in src_dir.iterdir()]
 
-    for src_vid in tqdm(
-        video_filepaths,
-        desc="Extracting keypoints",
-        total=len(video_filepaths),
-    ):
-        dst = osp.join(
-            Path(g.GROSSMOTOR_DIR_PK, "center-cropped"),
-            osp.splitext(osp.basename(src_vid))[0] + ".pkl",
+    for source in tqdm(sources, desc="Extracting keypoints", total=len(sources)):
+        destination = os.path.join(
+            Path(g.GROSSMOTOR_DIR_PK),
+            os.path.splitext(os.path.basename(source))[0] + ".pkl",
         )
-        if not osp.exists(dst):
-            anno = ntu_pose_extraction(src_vid.__str__(), skip_postproc=True)
-            mmengine.dump(anno, dst)
+
+        if not os.path.exists(destination):
+            anno = ntu_pose_extraction(source.__str__(), skip_postproc=True)
+            mmengine.dump(anno, destination)
+
         else:
-            print(f"{dst} already exists")
+            print(f"{destination} already exists")
+
+    # video_filepaths = list(g.PROCESSED_DIR.iterdir())
+
+    # for src_vid in tqdm(
+    #     video_filepaths,
+    #     desc="Extracting keypoints",
+    #     total=len(video_filepaths),
+    # ):
+    #     dst = osp.join(
+    #         Path(g.GROSSMOTOR_DIR_PK, "center-cropped"),
+    #         osp.splitext(osp.basename(src_vid))[0] + ".pkl",
+    #     )
+    #     if not osp.exists(dst):
+    #         anno = ntu_pose_extraction(src_vid.__str__(), skip_postproc=True)
+    #         mmengine.dump(anno, dst)
+    #     else:
+    #         print(f"{dst} already exists")
 
 
 if __name__ == "__main__":

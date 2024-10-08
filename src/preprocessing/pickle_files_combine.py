@@ -1,8 +1,9 @@
 import pickle
 from pathlib import Path
 
-from constants import globals as g
 from sklearn.model_selection import train_test_split
+
+from constants import globals as g
 
 
 def combine_pickles_from_directory(src: Path, dst: Path):
@@ -55,7 +56,7 @@ def combine_pickles_from_directory(src: Path, dst: Path):
 
 def main():
     combine_pickles_from_directory(
-        src=g.GROSSMOTOR_DIR_PK2, dst=g.GROSSMOTOR_DIR_PK_COMBINED
+        src=g.GROSSMOTOR_DIR_PK, dst=g.GROSSMOTOR_DIR_PK_COMBINED
     )
 
 
