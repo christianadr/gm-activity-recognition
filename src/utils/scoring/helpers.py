@@ -1,7 +1,39 @@
 import math
+from collections import namedtuple
 
 import mediapipe as mp
 import numpy as np
+
+Point = namedtuple("Point", ["x", "y"])
+
+
+def get_landmark_point(landmarks, landmark_index):
+    """Extract a specific landmark's coordinates."""
+    landmark = landmarks[landmark_index]
+    return Point(landmark.x, landmark.y)
+
+
+def detect_facing_direction(landmarks, mp_pose):
+    # Get landmark positions
+    nose = landmarks[mp_pose.PoseLandmark.NOSE.value]
+    left_shoulder = landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value]
+    right_shoulder = landmarks[mp_pose.PoseLandmark.RIGHT_SHOULDER.value]
+    left_hip = landmarks[mp_pose.PoseLandmark.LEFT_HIP.value]
+    right_hip = landmarks[mp_pose.PoseLandmark.RIGHT_HIP.value]
+
+    # Calculate shoulder and hip z-coordinates (depth) difference
+    shoulder_depth_diff = abs(left_shoulder.z - right_shoulder.z)
+    hip_depth_diff = abs(left_hip.z - right_hip.z)
+
+    # Determine facing direction based on the z-depth and x-coordinates of shoulders
+    if shoulder_depth_diff < 0.1 and hip_depth_diff < 0.1:
+        return "forward"
+    elif left_shoulder.z < right_shoulder.z:
+        return "left"
+    elif right_shoulder.z < left_shoulder.z:
+        return "right"
+    else:
+        return "backward"
 
 
 def calculate_angle(a: list, b: list, c: list) -> float:
@@ -129,3 +161,28 @@ def which_foot_landed(
     right_foot_landed = right_foot_near_ground
 
     return left_foot_landed, right_foot_landed
+
+
+def determine_lead_foot(left_foot, right_foot, direction):
+    if direction == "right":
+        if left_foot.x > right_foot.x:
+            leading = left_foot
+            trailing = right_foot
+            print("Leading is left foot")
+
+        elif right_foot.x > left_foot.x:
+            leading = right_foot
+            trailing = left_foot
+            print("Leading is right foot")
+
+    elif direction == "left":
+        if left_foot.x < right_foot.x:
+            leading = left_foot
+            trailing = right_foot
+            print("Leading is left foot")
+        elif right_foot.x < left_foot.x:
+            leading = right_foot
+            trailing = left_foot
+            print("Leading is right foot")
+
+    return leading, trailing

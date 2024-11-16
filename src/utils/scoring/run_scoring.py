@@ -2,24 +2,13 @@
 NOTE: Print statements are for debugging purposes.
 
 
-Script for calculating Run skill based on
+Script for calculating RUN skill based on
 TGMD-2 Performance Criteria Checklist.
 """
-
-from collections import namedtuple
 
 import mediapipe as mp
 
 from utils.scoring import helpers
-
-# Create a namedtuple for a 2D point (x, y)
-Point = namedtuple("Point", ["x", "y"])
-
-
-def get_landmark_point(landmarks, landmark_index):
-    """Extract a specific landmark's coordinates."""
-    landmark = landmarks[landmark_index]
-    return Point(landmark.x, landmark.y)
 
 
 def criteria_1(landmarks, mp_pose: mp.solutions.pose) -> bool:
@@ -39,25 +28,45 @@ def criteria_1(landmarks, mp_pose: mp.solutions.pose) -> bool:
     """
 
     # Extract landmarks using helper function
-    LEFT_HIP = get_landmark_point(landmarks, mp_pose.PoseLandmark.LEFT_HIP.value)
-    LEFT_KNEE = get_landmark_point(landmarks, mp_pose.PoseLandmark.LEFT_KNEE.value)
-    LEFT_ANKLE = get_landmark_point(landmarks, mp_pose.PoseLandmark.LEFT_ANKLE.value)
+    LEFT_HIP = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.LEFT_HIP.value
+    )
+    LEFT_KNEE = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.LEFT_KNEE.value
+    )
+    LEFT_ANKLE = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.LEFT_ANKLE.value
+    )
 
-    RIGHT_HIP = get_landmark_point(landmarks, mp_pose.PoseLandmark.RIGHT_HIP.value)
-    RIGHT_KNEE = get_landmark_point(landmarks, mp_pose.PoseLandmark.RIGHT_KNEE.value)
-    RIGHT_ANKLE = get_landmark_point(landmarks, mp_pose.PoseLandmark.RIGHT_ANKLE.value)
+    RIGHT_HIP = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.RIGHT_HIP.value
+    )
+    RIGHT_KNEE = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.RIGHT_KNEE.value
+    )
+    RIGHT_ANKLE = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.RIGHT_ANKLE.value
+    )
 
-    LEFT_SHOULDER = get_landmark_point(
+    LEFT_SHOULDER = helpers.get_landmark_point(
         landmarks, mp_pose.PoseLandmark.LEFT_SHOULDER.value
     )
-    LEFT_ELBOW = get_landmark_point(landmarks, mp_pose.PoseLandmark.LEFT_ELBOW.value)
-    LEFT_WRIST = get_landmark_point(landmarks, mp_pose.PoseLandmark.LEFT_WRIST.value)
+    LEFT_ELBOW = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.LEFT_ELBOW.value
+    )
+    LEFT_WRIST = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.LEFT_WRIST.value
+    )
 
-    RIGHT_SHOULDER = get_landmark_point(
+    RIGHT_SHOULDER = helpers.get_landmark_point(
         landmarks, mp_pose.PoseLandmark.RIGHT_SHOULDER.value
     )
-    RIGHT_ELBOW = get_landmark_point(landmarks, mp_pose.PoseLandmark.RIGHT_ELBOW.value)
-    RIGHT_WRIST = get_landmark_point(landmarks, mp_pose.PoseLandmark.RIGHT_WRIST.value)
+    RIGHT_ELBOW = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.RIGHT_ELBOW.value
+    )
+    RIGHT_WRIST = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.RIGHT_WRIST.value
+    )
 
     # Calculate angles for elbows and legs
     LEFT_LEG_ANGLE = helpers.calculate_angle(LEFT_HIP, LEFT_KNEE, LEFT_ANKLE)
@@ -103,8 +112,10 @@ def criteria_2(landmarks, mp_pose: mp.solutions.pose, height: int):
     threshold_pixel_y = None
 
     # LEFT FOOT COORDINATES
-    LEFT_HEEL = get_landmark_point(landmarks, mp_pose.PoseLandmark.LEFT_HEEL.value)
-    LEFT_FOOT_INDEX = get_landmark_point(
+    LEFT_HEEL = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.LEFT_HEEL.value
+    )
+    LEFT_FOOT_INDEX = helpers.get_landmark_point(
         landmarks, mp_pose.PoseLandmark.LEFT_FOOT_INDEX.value
     )
     LEFT_FOOT_MIDPOINT = helpers.calculate_midpoint(
@@ -112,8 +123,10 @@ def criteria_2(landmarks, mp_pose: mp.solutions.pose, height: int):
     )
 
     # RIGHT FOOT COORDINATES
-    RIGHT_HEEL = get_landmark_point(landmarks, mp_pose.PoseLandmark.RIGHT_HEEL.value)
-    RIGHT_FOOT_INDEX = get_landmark_point(
+    RIGHT_HEEL = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.RIGHT_HEEL.value
+    )
+    RIGHT_FOOT_INDEX = helpers.get_landmark_point(
         landmarks, mp_pose.PoseLandmark.RIGHT_FOOT_INDEX.value
     )
     RIGHT_FOOT_MIDPOINT = helpers.calculate_midpoint(
@@ -167,9 +180,9 @@ def criteria_2(landmarks, mp_pose: mp.solutions.pose, height: int):
             RIGHT_HEEL[1] * height < threshold_pixel_y
         )
 
-    # print(
-    #     f"Both feet off ground: {both_feet_off_ground}, Threshold: {threshold_pixel_y}"
-    # )
+    print(
+        f"Both feet off ground: {both_feet_off_ground}, Threshold: {threshold_pixel_y}"
+    )
 
     return both_feet_off_ground, threshold_pixel_y
 
@@ -195,32 +208,38 @@ def criteria_3(
 
     left_foot_landed = False
     right_foot_landed = False
+    distance = 0.0
+    narrow_foot = None
 
     # LEFT FOOT COORDINATES
-    LEFT_HEEL = get_landmark_point(landmarks, mp_pose.PoseLandmark.LEFT_HEEL.value)
-    LEFT_FOOT_INDEX = get_landmark_point(
+    LEFT_HEEL = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.LEFT_HEEL.value
+    )
+    LEFT_FOOT_INDEX = helpers.get_landmark_point(
         landmarks, mp_pose.PoseLandmark.LEFT_FOOT_INDEX.value
     )
-    LEFT_FOOT_MIDPOINT = helpers.calculate_midpoint(
-        LEFT_HEEL.x, LEFT_FOOT_INDEX.x, LEFT_HEEL.y, LEFT_FOOT_INDEX.y
-    )
+    # LEFT_FOOT_MIDPOINT = helpers.calculate_midpoint(
+    #     LEFT_HEEL.x, LEFT_FOOT_INDEX.x, LEFT_HEEL.y, LEFT_FOOT_INDEX.y
+    # )
 
     # RIGHT FOOT COORDINATES
-    RIGHT_HEEL = get_landmark_point(landmarks, mp_pose.PoseLandmark.RIGHT_HEEL.value)
-    RIGHT_FOOT_INDEX = get_landmark_point(
+    RIGHT_HEEL = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.RIGHT_HEEL.value
+    )
+    RIGHT_FOOT_INDEX = helpers.get_landmark_point(
         landmarks, mp_pose.PoseLandmark.RIGHT_FOOT_INDEX.value
     )
-    RIGHT_FOOT_MIDPOINT = helpers.calculate_midpoint(
-        RIGHT_HEEL.x, RIGHT_FOOT_INDEX.x, RIGHT_HEEL.y, RIGHT_FOOT_INDEX.y
-    )
+    # RIGHT_FOOT_MIDPOINT = helpers.calculate_midpoint(
+    #     RIGHT_HEEL.x, RIGHT_FOOT_INDEX.x, RIGHT_HEEL.y, RIGHT_FOOT_INDEX.y
+    # )
 
-    # Calculate angle for both feet
-    LEFT_FOOT_ANGLE = helpers.calculate_flatfoot(
-        LEFT_HEEL, LEFT_FOOT_MIDPOINT, LEFT_FOOT_INDEX
-    )
-    RIGHT_FOOT_ANGLE = helpers.calculate_flatfoot(
-        RIGHT_HEEL, RIGHT_FOOT_MIDPOINT, RIGHT_FOOT_INDEX
-    )
+    # # Calculate angle for both feet
+    # LEFT_FOOT_ANGLE = helpers.calculate_flatfoot(
+    #     LEFT_HEEL, LEFT_FOOT_MIDPOINT, LEFT_FOOT_INDEX
+    # )
+    # RIGHT_FOOT_ANGLE = helpers.calculate_flatfoot(
+    #     RIGHT_HEEL, RIGHT_FOOT_MIDPOINT, RIGHT_FOOT_INDEX
+    # )
 
     try:
         left_foot_landed, right_foot_landed = helpers.which_foot_landed(
@@ -244,7 +263,7 @@ def criteria_3(
         angle = 180 - angle
 
         narrow_foot = distance <= 0.01
-        notflatfooted = angle <= 178
+        # notflatfooted = angle <= 178
 
         # print(f"Angle between heel and foot index with threshold: {angle:.2f}")
 
@@ -262,7 +281,7 @@ def criteria_3(
         angle = 180 - angle
 
         narrow_foot = distance <= 0.01
-        notflatfooted = angle <= 178
+        # notflatfooted = angle <= 178
 
         # print(f"Angle between heel and foot index with threshold: {angle:.2f}")
 
@@ -271,7 +290,7 @@ def criteria_3(
     # print(f"flat footed: {notflatfooted}")
 
     # return narrow_foot and notflatfooted
-    return narrow_foot
+    return narrow_foot, distance
 
 
 def criteria_4(
@@ -305,13 +324,25 @@ def criteria_4(
     LEFT_LEG_ANGLE = 0.0
     RIGHT_LEG_ANGLE = 0.0
 
-    LEFT_HIP = get_landmark_point(landmarks, mp_pose.PoseLandmark.LEFT_HIP.value)
-    LEFT_KNEE = get_landmark_point(landmarks, mp_pose.PoseLandmark.LEFT_KNEE.value)
-    LEFT_ANKLE = get_landmark_point(landmarks, mp_pose.PoseLandmark.LEFT_ANKLE.value)
+    LEFT_HIP = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.LEFT_HIP.value
+    )
+    LEFT_KNEE = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.LEFT_KNEE.value
+    )
+    LEFT_ANKLE = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.LEFT_ANKLE.value
+    )
 
-    RIGHT_HIP = get_landmark_point(landmarks, mp_pose.PoseLandmark.RIGHT_HIP.value)
-    RIGHT_KNEE = get_landmark_point(landmarks, mp_pose.PoseLandmark.RIGHT_KNEE.value)
-    RIGHT_ANKLE = get_landmark_point(landmarks, mp_pose.PoseLandmark.RIGHT_ANKLE.value)
+    RIGHT_HIP = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.RIGHT_HIP.value
+    )
+    RIGHT_KNEE = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.RIGHT_KNEE.value
+    )
+    RIGHT_ANKLE = helpers.get_landmark_point(
+        landmarks, mp_pose.PoseLandmark.RIGHT_ANKLE.value
+    )
 
     try:
         left_foot_landed, right_foot_landed = helpers.which_foot_landed(
